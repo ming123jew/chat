@@ -1,12 +1,25 @@
 package handler
 
+import (
+	. "middleware"
+
+	"fmt"
+)
+
 type HomeHandler struct {
-	baseHandler
+	BaseHandler
+	Context
 }
 
 func (x *HomeHandler) Get() {
 
-	var params = make(map[string]interface{})
+	params :=map[string]interface{}{
+		"a":"a",
+	}
+	fmt.Print()
+
+	//x.C.ServeJson(params)
+
 	x.HTML("index.html",params)
 
 }

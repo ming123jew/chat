@@ -2,9 +2,11 @@ package main
 
 import (
 	. "common"
+	. "middleware"
 	"os"
 	"github.com/lunny/tango"
 	"github.com/tango-contrib/renders"
+	"github.com/tango-contrib/binding"
 	A "handler/admin"
 	H "handler/home"
 )
@@ -16,6 +18,8 @@ func init()  {
 	//初始化model　orm
 	SetEngine()
 
+	//初始化ctx
+	SetCtx()
 }
 
 
@@ -33,6 +37,9 @@ func main() {
 		Directory: "./templates/home",
 	}))
 
+	//启动参数到结构体映射
+	Tg.Use(binding.Bind())
+
 	//路由
 	Tg.Group("/admin", func(g *tango.Group) {
 		g.Get("/index", new(A.AdminHandler))
@@ -46,8 +53,17 @@ func main() {
 		g.Get("/index", new(H.HomeHandler))
 
 	})
+
+
+	Tg.Group("/user", func(g *tango.Group) {
+		g.Get("/index", new(H.UserHandler))
+
+	})
+
+	//Tg.Use(new(HelloHandler))
+
 	//设置访问端口
 	os.Setenv("PORT",Cfg.MustValue("common","http_port","8000"))
-	os.Setenv("HOST",Cfg.MustValue("common","http_host","127.0.0.1"))
+	os.Setenv("HOST",Cfg.MustValue("common","http_host",""))
 	Tg.Run()
 }
