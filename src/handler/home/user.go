@@ -11,6 +11,8 @@ import (
 type UserHandler struct {
 	BaseHandler
 	IsLogin bool
+
+
 }
 
 type MyStruct struct {
@@ -32,7 +34,8 @@ func (x *UserHandler) Get()  {
 	x.B.Bind(&mystruct)
 	log.Println(mystruct.Id,mystruct.Name)
 
-	fmt.Println()
+	fmt.Println(x.IP())
+
 
 	x.HTML("user/index.html",params)
 }

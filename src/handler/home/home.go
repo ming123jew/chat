@@ -8,7 +8,6 @@ import (
 
 type HomeHandler struct {
 	BaseHandler
-	Context
 }
 
 func (x *HomeHandler) Get() {

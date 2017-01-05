@@ -15,8 +15,56 @@
             position: relative;
         }
     </style>
+    <script src="http://cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(function() {
+
+            var conn;
+            var msg = $("#msg");
+            var log = $("#log");
+
+            function appendLog(msg) {
+                var d = log[0]
+                var doScroll = d.scrollTop == d.scrollHeight - d.clientHeight;
+                msg.appendTo(log)
+                if (doScroll) {
+                    d.scrollTop = d.scrollHeight - d.clientHeight;
+                }
+            }
+
+            $("#form").submit(function() {
+                if (!conn) {
+                    return false;
+                }
+                if (!msg.val()) {
+                    return false;
+                }
+                conn.send(msg.val());
+                msg.val("");
+                return false
+            });
+
+            if (window["WebSocket"]) {
+                conn = new WebSocket("ws://192.168.12.252:8001/ws");
+                conn.onclose = function(evt) {
+                    appendLog($("<div><b>Connection closed.</b></div>"))
+                }
+                conn.onmessage = function(evt) {
+                    appendLog($("<div/>").text(evt.data))
+                }
+            } else {
+                appendLog($("<div><b>Your browser does not support WebSockets.</b></div>"))
+            }
+        });
+    </script>
 </head>
 <body>
+<div style="line-height: 20px">表单信息</div>
+<div id="log"></div>
+<form id="form">
+    <input type="submit" value="Send" style="border: dashed #ccc 1px;" />
+    <input type="text" id="msg" size="64"/>
+</form>
 <!--  通过 iframe 嵌入前端定位组件，此处没有隐藏定位组件，使用了定位组件的在定位中视觉特效  -->
 <iframe id="geoPage" width="100%" height="30%" frameborder=0 scrolling="no"
         src="https://apis.map.qq.com/tools/geolocation?key={{.C.map_appkey}}&referer=myapp&effect=zoom"></iframe>
@@ -65,5 +113,12 @@
 <!-- 接收到位置信息后 通过 iframe 嵌入位置标注组件 -->
 <iframe id="markPage" width="100%" height="70%" frameborder=0 scrolling="no" src=""></iframe>
 {{.}}
+
+
+
+
+
+
 </body>
+
 </html>

@@ -11,7 +11,7 @@ import (
 )
 
 type C struct {
-	tango.Context
+	tango.Ctx
 }
 type S struct {
 	session.Session
@@ -24,28 +24,21 @@ type R struct {
 	renders.Renderer
 }
 
-type Context struct {
-	C						//Ctx/context
+type BaseHandler struct {
+	C
 	S						//Session
 	B						//binding.Binder
 	R 						//renders.Renderer
-	//FormErr  binding.Errors
 	Messages []string
 	Errors   []string
 	Response map[string]interface{}
-}
-
-
-type BaseHandler struct {
-	Context
 }
 
 func SetCtx()  {
 	
 }
 
-type HelloHandler struct {}
-func (HelloHandler) Handle(ctx *tango.Context) {
+func (x *BaseHandler) Handle(ctx *tango.Context) {
 
 	fmt.Println("before")
 	ctx.Next()

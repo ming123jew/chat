@@ -1,14 +1,17 @@
 package main
 
 import (
-	. "common"
 	. "middleware"
+	. "common"
+
 	"os"
 	"github.com/lunny/tango"
 	"github.com/tango-contrib/renders"
 	"github.com/tango-contrib/binding"
 	A "handler/admin"
 	H "handler/home"
+
+	"flag"
 )
 
 func init()  {
@@ -20,10 +23,16 @@ func init()  {
 
 	//初始化ctx
 	SetCtx()
+
+
+
 }
 
-
+var addr = flag.String("addr", ":8080", "http service address")
 func main() {
+	//
+
+
 
 	//初始化tango
 	Tg := tango.Classic()
@@ -52,6 +61,7 @@ func main() {
 	Tg.Group("/home", func(g *tango.Group) {
 		g.Get("/index", new(H.HomeHandler))
 
+
 	})
 
 
@@ -60,10 +70,15 @@ func main() {
 
 	})
 
-	//Tg.Use(new(HelloHandler))
+	go HUB.Run()
+
+	//启动websocket
+	Tg.Any("/ws",ServeWs)
 
 	//设置访问端口
 	os.Setenv("PORT",Cfg.MustValue("common","http_port","8000"))
 	os.Setenv("HOST",Cfg.MustValue("common","http_host",""))
 	Tg.Run()
+
+
 }
