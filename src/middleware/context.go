@@ -46,7 +46,7 @@ func (x *BaseHandler) Handle(ctx *tango.Context) {
 }
 
 
-func (x *BaseHandler)HTML(name string,T map[string]interface{})  {
+func (x *BaseHandler)HTML(name string,T ...map[string]interface{})  {
 
 	sys_params := map[string]interface{}{
 

@@ -10,10 +10,33 @@ Target Server Type    : MYSQL
 Target Server Version : 50611
 File Encoding         : 65001
 
-Date: 2016-12-30 17:51:03
+Date: 2017-01-06 17:38:49
 */
 
 SET FOREIGN_KEY_CHECKS=0;
+
+-- ----------------------------
+-- Table structure for `chat_position_log`
+-- ----------------------------
+DROP TABLE IF EXISTS `chat_position_log`;
+CREATE TABLE `chat_position_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL,
+  `attime` int(11) NOT NULL,
+  `nation` varchar(40) DEFAULT NULL,
+  `province` varchar(20) DEFAULT NULL,
+  `city` varchar(20) DEFAULT NULL,
+  `adcode` int(6) DEFAULT NULL COMMENT '//行政区ID，六位数字, 前两位是省，中间是市，后面两位是区，比如深圳市ID为440300',
+  `addr` varchar(100) DEFAULT NULL,
+  `lat` varchar(20) DEFAULT NULL COMMENT '//火星坐标(gcj02)，腾讯、Google、高德通用',
+  `lng` varchar(20) DEFAULT NULL COMMENT '//火星坐标(gcj02)，腾讯、Google、高德通用',
+  `accuracy` int(8) DEFAULT NULL COMMENT '误差范围，以米为单位',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Records of chat_position_log
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for `chat_user`

@@ -4,36 +4,32 @@ package middleware
 import (
 	"github.com/gorilla/websocket"
 	"time"
-	"regexp"
-	"strings"
 	"log"
-	"fmt"
-	"net/http"
 )
 
 const (
 	//对方写入会话等待时间
 	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
+	WriteWait = 10 * time.Second
 
 	//对方读取下次消息等待时间
 	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
+	PongWait = 60 * time.Second
 
 	//对方ping周期
 	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
+	PingPeriod = (PongWait * 9) / 10
 
 	//对方最大写入字节数
 	// Maximum message size allowed from peer.
-	maxMessageSize = 512
+	MaxMessageSize = 512
 
 	//验证字符串
-	authToken = "123456"
+	AuthToken = "123456"
 )
 
 //服务器配置信息
-var upgrader = websocket.Upgrader{
+var Upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
@@ -43,19 +39,31 @@ var upgrader = websocket.Upgrader{
 type Connection struct {
 	// The websocket Connection.
 	//websocket的连接
-	ws *websocket.Conn
+	Ws *websocket.Conn
 
 	// Buffered channel of outbound messages.
 	//出站消息缓存通道
-	send chan []byte
+	Send chan []byte
 
 	//验证状态
-	auth bool
+	Auth bool
+
+	//消息类型
+	Mtype int
 
 	//验证状态
-	username []byte
+	Username []byte
 
-	C
+	//分组标示
+	Groupid []byte
+
+	//来自哪个用户
+	Fromuser []byte
+
+	//对哪个用户
+	Touser []byte
+
+
 }
 
 
@@ -63,94 +71,68 @@ type Connection struct {
 //读取Connection中的数据导入到hub中，实则发广播消息
 //服务器读取的所有客户端的发来的消息
 // readPump pumps messages from the websocket Connection to the hub.
-func (c *Connection) readPump() {
+func (c *Connection) ReadPump()  {
 	defer func() {
 		//h.unregister <- c
-		c.ws.Close()
+		c.Ws.Close()
 	}()
-	c.ws.SetReadLimit(maxMessageSize)
-	c.ws.SetReadDeadline(time.Now().Add(pongWait))
-	c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	c.Ws.SetReadLimit(MaxMessageSize)
+	c.Ws.SetReadDeadline(time.Now().Add(PongWait))
+	c.Ws.SetPongHandler(func(string) error { c.Ws.SetReadDeadline(time.Now().Add(PongWait)); return nil })
+
 	for {
-		_, message, err := c.ws.ReadMessage()
+		_, message, err := c.Ws.ReadMessage()
 		if err != nil {
 			break
 		}
 
-		mtype := 2 //用户消息
-		text := string(message)
-		log.Println(text)
-		reg := regexp.MustCompile(`=[^&]+`)
-		log.Println(reg)
-		s := reg.FindAllString(text, -1)
-		log.Println(s)
 
-		//默认all
-		if len(s) == 2 {
-			fromuser := strings.Replace(s[0], "=", "", 1)
-			token := strings.Replace(s[1], "=", "", 1)
-			if token == authToken {
-				c.username = []byte(fromuser)
-				c.auth = true
-				message = []byte(fromuser + " join")
-				mtype = 1 //系统消息
-			}
-		}
-
-		touser := []byte("all")
-		reg2 := regexp.MustCompile(`^@.*? `)
-		s2 := reg2.FindAllString(text, -1)
-		if len(s2) == 1 {
-			s2[0] = strings.Replace(s2[0], "@", "", 1)
-			s2[0] = strings.Replace(s2[0], " ", "", 1)
-			touser = []byte(s2[0])
-		}
 		t := time.Now().Unix()
-		HUB.broadcast <- &Tmessage{content: message, fromuser: c.username, touser: touser, mtype: mtype, createtime: time.Unix(t, 0).String()}
-		log.Println(message,  c.username, touser, mtype,  time.Unix(t, 0).String())
-		if c.auth == true {
+		Hub.Broadcast <- &Tmessage{Content: message, Createtime: time.Unix(t, 0).String(), Mtype:c.Mtype, Fromuser:c.Fromuser, Touser:c.Touser, Groupid:c.Groupid}
+		log.Println(string(message),  string(c.Username),   time.Unix(t, 0).String(),string(c.Fromuser),string(c.Touser),string(c.Groupid))
 
-		}
 	}
+
 }
 
 
 //给消息，指定消息类型和荷载
 // write writes a message with the given message type and payload.
-func (c *Connection) write(mt int, payload []byte) error {
-	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
-	return c.ws.WriteMessage(mt, payload)
+func (c *Connection) Write(mt int, payload []byte) error {
+	c.Ws.SetWriteDeadline(time.Now().Add(WriteWait))
+	return c.Ws.WriteMessage(mt, payload)
 }
 
 //从hub到Connection写数据
 //服务器端发送消息给客户端
 // writePump pumps messages from the hub to the websocket Connection.
-func (c *Connection) writePump() {
+func (c *Connection) WritePump() {
 	//定时执行
-	ticker := time.NewTicker(pingPeriod)
+	ticker := time.NewTicker(PingPeriod)
+
 	defer func() {
 		ticker.Stop()
-		c.ws.Close()
+		c.Ws.Close()
 	}()
 
 	for {
 		select {
-		case message, ok := <-c.send:
+		case message, ok := <-c.Send:
 
 			if !ok {
-				fmt.Println("conn_writeump_case_1")
-				c.write(websocket.CloseMessage, []byte{})
+				log.Println("conn_writeump_case_1")
+				c.Write(websocket.CloseMessage, []byte{})
 
 				return
 			}
 
-			if err := c.write(websocket.TextMessage, message); err != nil {
-				fmt.Println("conn_writeump_case_2")
+			if err := c.Write(websocket.TextMessage, message); err != nil {
+				log.Println("conn_writeump_case_2")
 				return
 			}
 		case <-ticker.C:
-			if err := c.write(websocket.PingMessage, []byte{}); err != nil {
-				fmt.Println("conn_writeump_case_3")
+			if err := c.Write(websocket.PingMessage, []byte{}); err != nil {
+				log.Println("conn_writeump_case_3")
 				return
 			}
 		}
@@ -161,24 +143,44 @@ func (c *Connection) writePump() {
 }
 
 
-//处理客户端对websocket请求
-// serveWs handles websocket requests from the peer.
-
-func ServeWs(w http.ResponseWriter, r *http.Request) {
-
-	//设定环境变量
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
 
 
-	//初始化Connection
-	c := &Connection{send: make(chan []byte, 256), ws: ws, auth: false}
-	log.Println(c)
-	//加入注册通道，意思是只要连接的人都加入register通道
-	HUB.register <- c
-	go c.writePump() //服务器端发送消息给客户端
-	c.readPump()     //服务器读取的所有客户端的发来的消息
+type Tmessage struct {
+	Content    []byte
+	Fromuser   []byte
+	Touser     []byte
+	Mtype      int
+	Createtime string
+	Groupid	   []byte
+}
+
+// hub maintains the set of active connections and broadcasts messages to the
+// connections.
+type Huber struct {
+	// Registered connections.
+	//注册连接
+	Connections map[*Connection]bool
+
+	// Inbound messages from the connections.
+	//连接中的绑定消息
+	Broadcast chan *Tmessage
+
+	// Register requests from the connections.
+	//添加新连接
+	Register chan *Connection
+
+	// Unregister requests from connections.
+	//删除连接
+	Unregister chan *Connection
+}
+
+var Hub = Huber{
+	//广播slice
+	Broadcast: make(chan *Tmessage),
+	//注册者slice
+	Register: make(chan *Connection),
+	//未注册者sclie
+	Unregister: make(chan *Connection),
+	//连接map
+	Connections: make(map[*Connection]bool),
 }
