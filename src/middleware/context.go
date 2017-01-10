@@ -9,6 +9,9 @@ import (
 
 	"fmt"
 )
+const  (
+	SESSION_VALUE_USERLOGIN = "UserLogin" //登录变量
+)
 
 type C struct {
 	tango.Ctx
@@ -32,6 +35,7 @@ type BaseHandler struct {
 	Messages []string
 	Errors   []string
 	Response map[string]interface{}
+
 }
 
 func SetCtx()  {
@@ -60,3 +64,10 @@ func (x *BaseHandler)HTML(name string,T ...map[string]interface{})  {
 	})
 }
 
+func (x *BaseHandler) IsLogin() bool  {
+	s := x.S.Get(SESSION_VALUE_USERLOGIN)
+	if s != nil {
+		return true
+	}
+	return false
+}

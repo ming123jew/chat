@@ -6,9 +6,6 @@ import (
 	"model"
 )
 
-const  (
-	SESSION_VALUE_USERLOGIN = "UserLogin" //登录变量
-)
 
 
 type UserHandler struct {
@@ -22,20 +19,19 @@ type UserLogin struct {
 
 }
 
-func (x *UserHandler) IsLogin() bool  {
-	s := x.S.Get(SESSION_VALUE_USERLOGIN)
-	if s != nil {
-		return true
-	}
-	return false
+func init()  {
+
 }
+
+
 
 //默认主页
 func (x *UserHandler) Get()  {
 
-	params :=map[string]interface{}{
-		"a":"a",
-	}
+	//access := &model.ChatRoleUser{1,1}
+	//access.Add(access)
+	new(Rb).GetAccessList(1)
+
 
 	log.Println(x.IP())
 
@@ -43,6 +39,12 @@ func (x *UserHandler) Get()  {
 
 	log.Println(x.IsLogin())
 
+	var user = x.S.Get(SESSION_VALUE_USERLOGIN)
+
+	params :=map[string]interface{}{
+		"a"	:"a",
+		"user"	:user,
+	}
 	x.HTML("user/index.html",params)
 }
 
@@ -69,7 +71,7 @@ func (x *UserLogin) Post() {
 	if has == true{
 		x.S.Set(SESSION_VALUE_USERLOGIN,user)
 		log.Println("yes")
-
+		x.C.Redirect("/user/index")
 	}
 
 	log.Println(user)
