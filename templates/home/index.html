@@ -50,7 +50,13 @@
                     appendLog($("<div><b>Connection closed.</b></div>"))
                 }
                 conn.onmessage = function(evt) {
-                    appendLog($("<div/>").text(evt.data))
+                    if(evt.data=="nologin"){
+                        alert("请登录账号！")
+                        location.href = "/user/login"
+                    }else{
+                        appendLog($("<div/>").text(evt.data))
+                    }
+
                 }
             } else {
                 appendLog($("<div><b>Your browser does not support WebSockets.</b></div>"))
@@ -59,6 +65,7 @@
     </script>
 </head>
 <body>
+<div><button type="button" onclick="location.href='/user/logout'">退出</button></div>
 <div style="line-height: 20px">表单信息</div>
 <div id="log"></div>
 <form id="form">

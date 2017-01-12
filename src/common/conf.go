@@ -15,3 +15,4 @@ func SetConf()  {
 		Cfg, err = cfg.LoadConfigFile("../config.ini")
 	}
 }
+

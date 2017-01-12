@@ -3,14 +3,14 @@ package handler
 import (
 	. "middleware"
 	//"net/http"
-
 	"log"
+	"model"
 )
 
 
 type ChatHandler struct {
 	Huber
-	BaseHandler
+	Middler
 }
 
 //处理客户端对websocket请求
@@ -18,31 +18,47 @@ type ChatHandler struct {
 
 func (x *ChatHandler)Get() {
 
-
 	//设定环境变量
-	ws, err := Upgrader.Upgrade(x.C.ResponseWriter, x.C.Req(), nil)
+	ws, err := Upgrader.Upgrade(x.Ctx.ResponseWriter, x.Ctx.Req(), nil)
 	if err != nil {
-		log.Println(err)
+		log.Println("error:",err)
 		return
 	}
-
-	groupid 	:= []byte("1")
-	username 	:=  []byte("touser")
-	fromuser 	:= username
-	touser 		:= []byte("touser")
-	mtype 		:= 2
 	//初始化Connection
-	c := &Connection{Send: make(chan []byte, 256), Ws: ws, Auth: false, Mtype:mtype, Username:username, Groupid:groupid, Fromuser:fromuser, Touser:touser,}
-	//log.Println(c)
-	//加入注册通道，意思是只要连接的人都加入register通道
+	c := &Connection{Send: make(chan []byte, 256), Ws: ws, Auth: false,}
 
-	Hub.Register <- c
-	go c.WritePump() //服务器端发送消息给客户端
-	c.ReadPump()     //服务器读取的所有客户端的发来的消息
+	//验证用户
+	chatuser_session := x.Session.Get(SESSION_VALUE_USERLOGIN)
+
+	if chatuser_session!=nil{
+		chatuser := chatuser_session.(model.ChatUser)
+
+		log.Println(chatuser,chatuser.Username)
+
+		groupid 	:= []byte("1")
+		username 	:= []byte(chatuser.Username)
+		fromuser 	:= []byte(chatuser.Username)
+		touser 		:= []byte("all")
+		mtype 		:= 3
+
+		c = &Connection{Send: make(chan []byte, 256), Ws: ws, Auth: false, Mtype:mtype, Username:username, Groupid:groupid, Fromuser:fromuser, Touser:touser,}
+
+		//log.Println(c)
+		//加入注册通道，意思是只要连接的人都加入register通道
+		Hub.Register <- c
+		go c.WritePump() //服务器端发送消息给客户端
+		c.ReadPump()     //服务器读取的所有客户端的发来的消息
+	}else{
+
+		c.Send <- []byte("nologin")
+		go c.WritePump() //服务器端发送消息给客户端
+		c.ReadPump()     //服务器读取的所有客户端的发来的消息
+	}
 }
 
 
-func  ChatHandlerRun() {
+
+func ChatHandlerRun() {
 
 	for {
 		select {
@@ -73,11 +89,12 @@ func  ChatHandlerRun() {
 				if m.Mtype == 1 { //系统消息
 					send_msg = []byte(" system: " + string(m.Content))
 				} else if m.Mtype == 2 { //用户消息
-					send_msg = []byte(string(m.Fromuser) + " say: " + string(m.Content))
+					send_msg = []byte(string(m.Fromuser) + " say to you: " + string(m.Content))
 				} else {
-					send_msg = []byte(string(m.Content))
+					send_msg = []byte(string(m.Fromuser) + " say: " + string(m.Content))
 				}
-				log.Print(send_msg)
+
+				log.Print(send_msg,"sess::")
 				if string(m.Touser) != "all" {
 					if string(c.Username) == string(m.Touser) || string(c.Username) == string(m.Fromuser) {
 						send_flag = true

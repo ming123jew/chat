@@ -48,7 +48,7 @@ type Connection struct {
 	//验证状态
 	Auth bool
 
-	//消息类型
+	//消息类型  1:系统消息　　2：用户消息　　3：其它
 	Mtype int
 
 	//验证状态

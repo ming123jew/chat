@@ -35,6 +35,7 @@ func (self *ChatUser) GetChatUserById(id int) (*ChatUser, error) {
 }
 
 func (self *ChatUser) Exist() (bool, error) {
+
 	return Orm.Get(self)
 
 }
