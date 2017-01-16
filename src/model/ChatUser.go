@@ -17,9 +17,15 @@ type ChatUser struct {
 
 //查询所有列表，不建议使用
 func (self *ChatUser) SelectAll() ([]ChatUser, error) {
+
 	var chatuser []ChatUser
 	err := Orm.Find(&chatuser)
 	return chatuser, err
+}
+
+func (self *ChatUser) Count() (int64,error) {
+	var chatuser ChatUser
+	return Orm.Count(chatuser)
 }
 
 func (self *ChatUser) GetUser() (*ChatUser,error)  {

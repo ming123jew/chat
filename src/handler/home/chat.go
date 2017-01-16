@@ -5,6 +5,8 @@ import (
 	//"net/http"
 	"log"
 	"model"
+	"regexp"
+	"strings"
 )
 
 
@@ -66,8 +68,39 @@ func ChatHandlerRun() {
 		case c := <-Hub.Register:
 			Hub.Connections[c] = true
 
+			//发送通知数据给连接
+			for d := range Hub.Connections {
+				var send_msg []byte
+				send_msg = []byte(string("欢迎" + string(c.Username) + "加入聊天"))
+
+				select {
+				//发送数据给连接
+				case d.Send <- send_msg:
+				//关闭连接
+				default:
+					close(d.Send)
+					delete(Hub.Connections, d)
+				}
+			}
+
 		//非注册者有数据，则删除连接map
 		case c := <-Hub.Unregister:
+
+			//发送通知数据给连接
+			for d := range Hub.Connections {
+				var send_msg []byte
+				send_msg = []byte(string( string(c.Username) + "离开了聊天室"))
+
+				select {
+				//发送数据给连接
+				case d.Send <- send_msg:
+				//关闭连接
+				default:
+					close(d.Send)
+					delete(Hub.Connections, d)
+				}
+			}
+
 			if _, ok := Hub.Connections[c]; ok {
 				delete(Hub.Connections, c)
 				close(c.Send)
@@ -85,6 +118,21 @@ func ChatHandlerRun() {
 					reg2 := regexp.MustCompile(`^@.*? `)
 					s2 := reg2.FindAllString(text2, -1)
 				*/
+				//查找@标签　
+				check_content := string(m.Content)
+				find_flag := regexp.MustCompile(`^@.*? `)
+				find_user := find_flag.FindAllString(check_content,-1)
+
+				log.Println(find_user)
+
+				if find_user != nil {
+
+					m.Mtype = 2
+					find_user[0] = strings.Replace(find_user[0], "@", "", 1)
+					find_user[0] = strings.Replace(find_user[0], " ", "", 1)
+					m.Touser = []byte(find_user[0])
+				}
+
 				var send_msg []byte
 				if m.Mtype == 1 { //系统消息
 					send_msg = []byte(" system: " + string(m.Content))

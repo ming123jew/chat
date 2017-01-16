@@ -4,6 +4,7 @@ import (
 	. "middleware"
 	"log"
 	"model"
+	"time"
 )
 
 
@@ -22,13 +23,41 @@ type UserLogin struct {
 
 //默认主页
 func (x *UserHandler) Get()  {
+time.Sleep(time.Second*3)
+	//x.Ctx.Write([]byte("{status:1,data:123}"))
 
+	//b := map[string]string{
+	//	"status":"1",
+	//}
+	c := []map[string]string{
+		0 :   {
+			"title":"发中国雾霾财，这家美国公司，靠一个口罩赚300亿",
+			"thumb":"/images/post-img1.jpg",
+			"url":"",
+			"viewnum":"2",
+			"desc":"发中国雾霾财，这家美国公司，靠一个口罩赚300亿",
+		},
+		1 :   {
+			"title":"论用10年房价、收入涨幅计算心理阴影面积",
+			"thumb":"/images/post-img2.png",
+			"url":"",
+			"viewnum":"20",
+			"desc":"夕阳下，是房价飞奔在工薪族心理留下的巨大阴影",
+		},
+	}
+	//a["res"] = b
+	a := map[string]interface{}{
+		"list":c,
+		"status":200,
+	}
+	x.Ctx.Header()
+	x.Ctx.ServeJson(a)
 	//access := &model.ChatRoleUser{1,1}
 	//access.Add(access)
 
 	//x.Rbac.AccessDecision( "User","Get" )
 	//x.GetModuleAccessList(1,"test")
-
+/*
 	log.Println("method",x.Ctx.Req().Method )
 
 
@@ -44,7 +73,11 @@ func (x *UserHandler) Get()  {
 		"a"	:"a",
 		"user"	:user,
 	}
-	x.HTML("user/index.html",params)
+
+	user2 := model.ChatUser{}
+	c,_ := user2.Count()
+	log.Println("user count:",c)
+	x.HTML("user/index.html",params)*/
 }
 
 func (x *UserLogin) Get(){
