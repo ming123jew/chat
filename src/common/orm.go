@@ -1,7 +1,6 @@
 package common
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -26,7 +25,7 @@ func SetEngine() *xorm.Engine {
 	//Orm, err = xorm.NewEngine("mysql", "root:@/chat?charset=utf8&parseTime=true")
 	//fmt.Print(username+":"+password+"@tcp("+server+")/"+db_name+"?charset="+charset+"&parseTime=true")
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	Orm.TZLocation = time.Local
 

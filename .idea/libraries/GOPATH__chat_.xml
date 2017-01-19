@@ -2,9 +2,11 @@
   <library name="GOPATH &lt;chat&gt;">
     <CLASSES>
       <root url="file://E:/goproject/src/github.com" />
+      <root url="file://E:/goproject/src/gopkg.in" />
     </CLASSES>
     <SOURCES>
       <root url="file://E:/goproject/src/github.com" />
+      <root url="file://E:/goproject/src/gopkg.in" />
     </SOURCES>
     <excluded>
       <root url="file://$PROJECT_DIR$" />

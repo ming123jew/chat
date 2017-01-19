@@ -13,6 +13,7 @@ func (x *HomeHandler) Get() {
 
 	params :=map[string]interface{}{
 		"a":"a",
+		"b":[]byte("ddd"),
 	}
 	fmt.Print()
 
@@ -20,4 +21,8 @@ func (x *HomeHandler) Get() {
 
 	x.HTML("index.html",params)
 
+}
+
+func (x *HomeHandler)Say( s interface{} ) string{
+	return s.(string)
 }

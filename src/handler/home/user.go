@@ -84,7 +84,8 @@ func (x *UserLogin) Get(){
 	if x.IsLogin() == true{
 		x.Ctx.Redirect("/user/index")
 	}
-	x.HTML("user/login.html")
+	a := make(map[string]interface{})
+	x.HTML("user/login.html",a)
 
 }
 

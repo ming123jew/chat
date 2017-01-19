@@ -1,84 +1,41 @@
 package main
 
 import (
-	"strings"
 	"log"
-	"reflect"
-	"errors"
-	"github.com/tango-contrib/session"
-	"time"
-	. "middle"
-	"github.com/lunny/tango"
+	"fmt"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
-const   (
-	REQUIRE_AUTH_MODULE = "Public,Node"
-	NOT_AUTH_MODULE =""
-)
-
-type   S  struct {
-	session.Session
+type Person struct {
+	Name string
+	Phone string
 }
 
-
-
-func (x *S)Handle()  {
-	session.New(session.Options{
-		MaxAge:time.Minute * 20,
-	})
-	x.Set("a","b")
-}
-
-var (
-	Sess = session.Default()
-)
-func main()  {
-
-
-	//初始化tango
-	Tg := tango.Classic()
-
-	Tg.Use( Hand(Sess) )
-
-	Tg.Get("/user2",new(User),)
-
-	Tg.Run()
-
-
-	var module map[string][]string
-	//var action map[string][]string
-	module = make(map[string][]string)
-	if REQUIRE_AUTH_MODULE!="" {
-		module["yes"] = strings.Split(REQUIRE_AUTH_MODULE,",")
-	}else{
-		module["no"] = strings.Split(NOT_AUTH_MODULE,",")
+func main() {
+	session, err := mgo.Dial("127.0.0.1:27017")
+	if err != nil {
+		panic(err)
 	}
 
-	if ok,_ := Contains("Publicd",module["yes"]) ;ok{
-		log.Println("yes")
-	}
-	if ok,_ := Contains("Publicd",module["no"]) ;ok{
-		log.Println("yes")
-	}
-	if module["no"]==nil{
-		log.Println("no")
+	defer session.Close()
+
+	// Optional. Switch the session to a monotonic behavior.
+	session.SetMode(mgo.Monotonic, true)
+
+	c := session.DB("test").C("people")
+	err = c.Insert(&Person{"Ale", "+55 53 8116 9639"},
+		&Person{"Cla", "+55 53 8402 8510"})
+	if err != nil {
+		log.Fatal(err)
 	}
 
-}
+	result := Person{}
+	err = c.Find(bson.M{"name": "Ale"}).One(&result)
 
-func Contains(obj interface{}, target interface{}) (bool, error) {
-	targetValue := reflect.ValueOf(target)
-	switch reflect.TypeOf(target).Kind() {
-	case reflect.Slice, reflect.Array:
-		for i := 0; i < targetValue.Len(); i++ {
-			if targetValue.Index(i).Interface() == obj {
-				return true, nil
-			}
-		}
-	case reflect.Map:
-		if targetValue.MapIndex(reflect.ValueOf(obj)).IsValid() {
-			return true, nil
-		}
+	if err != nil {
+		log.Fatal(err)
 	}
-	return false, errors.New("not in")
+
+	fmt.Println("Phone:", result.Phone)
 }
