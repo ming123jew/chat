@@ -23,6 +23,8 @@ func init()  {
 	//初始化model　orm
 	SetEngine()
 
+	//
+	SetMgo()
 
 }
 
@@ -50,6 +52,8 @@ func main() {
 	Tg.Use(binding.Bind())
 	Tg.Use(MiddleHandler(SESS))
 
+
+
 	//静态文件服务器
 	Tg.Use(tango.Static(tango.StaticOptions{Prefix:"static"}))
 
@@ -65,7 +69,7 @@ func main() {
 
 	Tg.Group("/home", func(g *tango.Group) {
 		g.Get("/index", new(H.HomeHandler))
-
+		g.Get("/index2", new(H.HomeHandler).Post)
 
 	})
 
@@ -83,6 +87,8 @@ func main() {
 	//启动websocket
 	Tg.Any("/ws",new(H.ChatHandler))
 
+	//启动websocket记录位置
+	Tg.Any("/wsposition",new(H.ChatPositionLogHandler))
 
 
 	//设置访问端口
