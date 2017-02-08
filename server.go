@@ -32,11 +32,10 @@ func init()  {
 var (
 	addr = flag.String("addr", ":8080", "http service address")
 	SESS = session.New(session.Options{MaxAge:time.Minute * 20, })
+
 )
 func main() {
 	//
-
-
 
 	//初始化tango
 	Tg := tango.Classic()
@@ -45,7 +44,7 @@ func main() {
 	//启动模板服务
 	var renders = renders.New(renders.Options{
 		Reload: true,
-		Directory: "./templates/home",
+		Directory: "./templates",
 	})
 	Tg.Use(renders)
 	//启动参数到结构体映射
@@ -55,16 +54,15 @@ func main() {
 
 
 	//静态文件服务器
-	Tg.Use(tango.Static(tango.StaticOptions{Prefix:"static"}))
+	Tg.Use(tango.Static(tango.StaticOptions{RootPath:"static"}))
 
 
 	//路由
 	Tg.Group("/admin", func(g *tango.Group) {
-		g.Get("/index", new(A.AdminHandler))
-		g.Get("/1", func() string{
+		g.Use( A.AdminHandler )
 
-			return "/1"
-		})
+		g.Route([]string{"GET:Get","POST:Post"},"/login",new(A.AdminLogin))
+
 	})
 
 	Tg.Group("/home", func(g *tango.Group) {
@@ -76,7 +74,7 @@ func main() {
 
 	Tg.Group("/user", func(g *tango.Group) {
 		g.Get("/index", new(H.UserHandler))
-		g.Route([]string{"GET:Get","POST:Post"},"/login",new(H.UserLogin),new(H.UserLogin))
+		g.Route([]string{"GET:Get","POST:Post"},"/login",new(H.UserLogin))
 		g.Route([]string{"GET:Logout"},"/logout",new(H.UserLogin))
 		//g.Get("/logout",new(H.UserLogin).Logout)
 		//g.Post("/login",new(H.UserLogin))

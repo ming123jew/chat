@@ -13,6 +13,7 @@ type ChatUser struct {
 	Status   int    ` tinyint(2) NOT NULL DEFAULT 1`
 	Groupid  int    ` int(5) NOT NULL DEFAULT 0`
 	Email    string ` varchar(60) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL`
+	Roleid   int    ` int(5) NOT NULL DEFAULT 0`
 }
 
 //查询所有列表，不建议使用

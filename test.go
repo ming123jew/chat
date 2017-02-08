@@ -2,9 +2,10 @@ package main
 
 import (
 	"log"
-	"fmt"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	//"fmt"
+	//"gopkg.in/mgo.v2"
+	//"gopkg.in/mgo.v2/bson"
+	"reflect"
 )
 
 type Person struct {
@@ -12,7 +13,17 @@ type Person struct {
 	Phone string
 }
 
+type base struct {
+	a interface{}
+}
+
 func main() {
+	b := base{}
+	r := make([]int,1)
+	b.a = &r
+	targetValue := reflect.ValueOf(b.a)
+	log.Println( "he",targetValue.Len() )
+/*
 	session, err := mgo.Dial("127.0.0.1:27017")
 	if err != nil {
 		panic(err)
@@ -37,5 +48,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Phone:", result.Phone)
+	fmt.Println("Phone:", result.Phone)*/
 }

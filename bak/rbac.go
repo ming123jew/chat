@@ -1,12 +1,14 @@
 package middleware
 
 import (
-	. "common"
-	"log"
 
+	"log"
+	. "common"
 	"strings"
 	"crypto/md5"
 	"encoding/hex"
+
+	"github.com/tango-contrib/session"
 )
 
 const(
@@ -25,12 +27,10 @@ type Rbac struct {
 	Middler
 }
 
-
-
 //权限认证的过滤器方法
 //@parm m moduleName
 //@parm a actionName
-func (x *Rbac)AccessDecision(m string, a string)  bool{
+func (x *Rbac)AccessDecision(m string, a string, s *session.Session)  bool{
 	//存在认证识别号，则进行进一步的访问决策
 	hash := md5.New()
 	hash.Write([]byte(m+a))
@@ -38,14 +38,15 @@ func (x *Rbac)AccessDecision(m string, a string)  bool{
 	hexText := make([]byte, 32)
 	hex.Encode(hexText, cipherText2)
 	accessGuid   := string(hexText)
-	x.Session.Set("aa","ddd")
+
+	s.Set("aa","ddd")
 
 	if x.CheckAccess(m,a)==true {
 		accessLit := []string{}
 		if USER_AUTH_TYPE==2{
 			//加强验证和即时验证模式 更加安全 后台权限修改可以即时生效
 			//通过数据库进行访问检查
-			authid := x.Session.Get(USER_AUTH_KEY).(int)
+			authid := s.Get(USER_AUTH_KEY).(int)
 			if authid==0{
 				authid = 1
 			}
@@ -54,11 +55,11 @@ func (x *Rbac)AccessDecision(m string, a string)  bool{
 
 		}else{
 			// 如果是管理员或者当前操作已经认证过，无需再次认证
-			if x.Session.Get( accessGuid ).(bool) {
+			if s.Get( accessGuid ).(bool) {
 				return true
 			}
 			//登录验证模式，比较登录后保存的权限访问列表
-			accessLit := x.Session.Get(_ACCESS_LIST)
+			accessLit := s.Get(_ACCESS_LIST)
 			log.Println(accessLit)
 			//accessLit = append(accessLit)
 		}
@@ -71,9 +72,9 @@ func (x *Rbac)AccessDecision(m string, a string)  bool{
 
 
 // 取得模块的所属记录访问权限列表 返回有权限的记录ID数组
-func (x *Rbac)GetRecordAccessList(p int, m string)  {
+func (x *Rbac)GetRecordAccessList(p int, m string, s *session.Session)  {
 	if p==0 {
-		p = x.Session.Get(USER_AUTH_KEY) . (int)
+		p = s.Get(USER_AUTH_KEY) . (int)
 	}
 	if m=="" {
 		panic("module no value")
@@ -125,16 +126,16 @@ func (x *Rbac)CheckAccess( moduleName string, actionName string ) bool{
 }
 
 //用于检测用户权限的方法,并保存到Session中
-func (x *Rbac)SaveAccessList(p int)  {
+func (x *Rbac)SaveAccessList(p int,s *session.Session)  {
 	if p == 0 {
-		p = x.Session.Get(USER_AUTH_KEY) . (int)
+		p = s.Get(USER_AUTH_KEY) . (int)
 	}
 	// 如果使用普通权限模式，保存当前用户的访问权限列表
 	// 对管理员开发所有权限
-	a := x.Session.Get(USER_AUTH_KEY).(int)
-	b := x.Session.Get(ADMIN_AUTH_KEY).(int)
+	a := s.Get(USER_AUTH_KEY).(int)
+	b := s.Get(ADMIN_AUTH_KEY).(int)
 	if a != 2 &&  b !=0  {
-		x.Session.Set(_ACCESS_LIST,x.GetAccessList(p))
+		s.Set(_ACCESS_LIST,x.GetAccessList(p))
 	}
 }
 

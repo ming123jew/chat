@@ -1,27 +1,60 @@
 package handler
 
+import (
+	. "middleware"
+	"model"
+	"log"
+)
+
+const (
 
 
+)
 
-type AdminHandler struct {
-	baseHandler
+
+type Admin struct {
+	BaseHandler
 }
 
-func (x *AdminHandler) Get() {
 
+type AdminLogin struct {
+	Admin
+	Username string
+	Password string
+}
+
+
+
+func (x *AdminLogin) Get() {
+	x.Session.Set("a","okl")
 	var params = make(map[string]interface{})
-	x.HTML("index.html",params)
+	x.HTML("administrator/login.html",params)
+}
+
+func (x *AdminLogin) Post()  {
+	var form AdminLogin
+	x.Binding.Bind(&form)
+	user := model.ChatUser{Username:form.Username,Password:form.Password}
+
+	has, err := user.Exist()
+	if err != nil{
+		x.Ctx.Write([]byte("账号或密码错误."))
+	}
+
+	//验证账号真实性
+	if user.Id==0 {
+		x.Ctx.Write([]byte("账号不存在."))
+		has = false
+	}
+
+	//验证权限
+	if has == true{
+		log.Println(user)
+		//x.Test()
+	}
 
 }
 
-/*
-type RenderAction struct {
-	renders.Renderer
-}
 
-func (x *RenderAction) Get() {
-	x.Render("index.html", renders.T{
-		"test": "这个是模板渲染",
-	})
-}
-*/
+
+

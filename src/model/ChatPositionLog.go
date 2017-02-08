@@ -3,6 +3,7 @@ package model
 import (
 
 	. "common"
+	"log"
 )
 
 type ChatPositionLog struct {
@@ -40,7 +41,7 @@ func (self *ChatPositionLog)Add(x *ChatPositionLog) (error) {
 	})
 	
 	if err !=nil{
-		panic(err)
+		log.Println(err)
 	}
 
 	return err
@@ -51,7 +52,7 @@ func (self *ChatPositionLog)Exist() ChatPositionLog {
 	result := ChatPositionLog{}
 	err := mgo.Find(self).One(&result)
 	if err !=nil{
-		panic(err)
+		log.Println(err)
 	}
 	return result
 }

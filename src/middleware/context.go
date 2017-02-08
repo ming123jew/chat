@@ -6,11 +6,10 @@ import (
 	"github.com/lunny/tango"
 	"github.com/tango-contrib/binding"
 	. "common"
-
-	"fmt"
 	"reflect"
 	"errors"
 	"log"
+	"strings"
 )
 const  (
 	SESSION_VALUE_USERLOGIN = "UserLogin" //登录变量
@@ -29,14 +28,23 @@ type Middler struct {
 
 type MiderlerInterface interface {
 	SetMiddler(*session.Session,*tango.Context)
+	SetRbac()
 
 }
 
 func (x *Middler)SetMiddler(s *session.Session,c *tango.Context)  {
 	x.Session = s
 	x.Ctx = c
-	log.Println("heeeee")
+}
 
+func (x *Middler)SetRbac()  {
+	//暂未作使用,预留
+	//判断是否是后台入口如是则进行检测权限
+	urlstrings := strings.Split( x.Ctx.Req().RequestURI,"/")
+	flag,_ := Contains("admin",urlstrings)
+	if flag {
+		log.Println("check")
+	}
 }
 
 type Renders struct {
@@ -58,6 +66,7 @@ func MiddleHandler(s *session.Sessions) tango.HandlerFunc  {
 			if miderlerInterface, ok := action.(MiderlerInterface); ok {
 
 				miderlerInterface.SetMiddler(sess,ctx)
+				miderlerInterface.SetRbac()
 			}
 		}
 		ctx.Next()
@@ -70,20 +79,16 @@ type BaseHandler struct {
 
 }
 
-func (x *BaseHandler) Handle(ctx *tango.Context) {
-
-	fmt.Println("before")
-	ctx.Next()
-	fmt.Println("after")
-}
 
 
 func (x *BaseHandler)HTML(name string,T ...map[string]interface{})  {
 
 	sys_params := map[string]interface{}{
 
-		"map_appkey":Cfg.MustValue("map","map_appkey","T6VBZ-YQ7CI-PU5GI-5TMLM-TGK7T-WCBAU"),
-		"map_url":Cfg.MustValue("map","map_url","T6VBZ-YQ7CI-PU5GI-5TMLM-TGK7T-WCBAU"),
+		"map_appkey":Cfg.MustValue("map","map_appkey",""),
+		"map_url":Cfg.MustValue("map","map_url",""),
+		"static_url":Cfg.MustValue("common","static_url",""),
+
 	}
 	T2 := make(map[string]interface{})
 	for _,v := range T{
@@ -126,3 +131,9 @@ func Contains(obj interface{}, target interface{}) (bool, error) {
 	return false, errors.New("not in")
 }
 
+
+
+//权限判断
+func CheckPermission()  {
+
+}
