@@ -12,7 +12,11 @@ import (
 	"strings"
 )
 const  (
-	SESSION_VALUE_USERLOGIN = "UserLogin" //登录变量
+	SESSION_VALUE_USERLOGIN = "UserLogin" 	//登录session变量
+
+	SESSION_VALUE_ADMINLOGIN = "AdminLogin" //后台登录session变量
+	SESSION_VALUE_ADMINLOGIN_ROLE = "AdminLoginRoleid"	//后台登录roleid session变量
+	ADMIN_FLAG = "admin"			//后台入口标示
 )
 
 
@@ -27,25 +31,53 @@ type Middler struct {
 }
 
 type MiderlerInterface interface {
-	SetMiddler(*session.Session,*tango.Context)
-	SetRbac()
+	setMiddler(*session.Session,*tango.Context)
+	setRbac()
 
 }
 
-func (x *Middler)SetMiddler(s *session.Session,c *tango.Context)  {
+func (x *Middler)setMiddler(s *session.Session,c *tango.Context)  {
 	x.Session = s
 	x.Ctx = c
 }
 
-func (x *Middler)SetRbac()  {
+func (x *Middler)setRbac()  {
 	//暂未作使用,预留
 	//判断是否是后台入口如是则进行检测权限
-	urlstrings := strings.Split( x.Ctx.Req().RequestURI,"/")
-	flag,_ := Contains("admin",urlstrings)
-	if flag {
-		log.Println("check")
+	if USER_AUTH_TYPE > 0 {
+
+		params := strings.Split(strings.ToLower(strings.Split(x.Ctx.Req().RequestURI, "?")[0]), "/")
+		//后台验证
+		if params[1]==ADMIN_FLAG {
+			if params[2] != "login" {
+				//判断是否已经登陆
+				if !x.IsLoginAdmin() {
+					x.Ctx.Redirect("login")
+					return
+				}
+			}
+			log.Println(params)
+			if  CheckAccess(params) {
+
+				if USER_AUTH_TYPE==1 {
+					//session登录认证
+
+				}else if USER_AUTH_TYPE==2{
+					//实时认证
+
+					roleid := x.GetAdminSesionRoleid()
+					log.Println(roleid)
+				}
+
+
+			}
+		}
+
 	}
+
 }
+
+
 
 type Renders struct {
 	renders.Renderer
@@ -65,8 +97,8 @@ func MiddleHandler(s *session.Sessions) tango.HandlerFunc  {
 
 			if miderlerInterface, ok := action.(MiderlerInterface); ok {
 
-				miderlerInterface.SetMiddler(sess,ctx)
-				miderlerInterface.SetRbac()
+				miderlerInterface.setMiddler(sess,ctx)
+				miderlerInterface.setRbac()
 			}
 		}
 		ctx.Next()
@@ -74,14 +106,7 @@ func MiddleHandler(s *session.Sessions) tango.HandlerFunc  {
 }
 
 
-type BaseHandler struct {
-	Middler
-
-}
-
-
-
-func (x *BaseHandler)HTML(name string,T ...map[string]interface{})  {
+func (x *Middler)HTML(name string,T ...map[string]interface{})  {
 
 	sys_params := map[string]interface{}{
 
@@ -103,13 +128,39 @@ func (x *BaseHandler)HTML(name string,T ...map[string]interface{})  {
 
 
 //判断用户有没有登录
-func (x *BaseHandler) IsLogin() bool  {
+func (x *Middler) IsLogin() bool  {
 	s := x.Session.Get(SESSION_VALUE_USERLOGIN)
 	if s != nil {
 		return true
 	}
 	return false
 }
+
+func(x *Middler) GetUserSessionInfo() interface{}{
+
+	s := x.Session.Get(SESSION_VALUE_USERLOGIN)
+	return s
+}
+
+func (x *Middler) IsLoginAdmin() bool {
+	s := x.Session.Get(SESSION_VALUE_ADMINLOGIN)
+	if s != nil {
+		return true
+	}
+	return false
+}
+
+func(x *Middler) GetAdminSessionInfo() interface{}{
+
+	s := x.Session.Get(SESSION_VALUE_ADMINLOGIN)
+	return s
+}
+
+func (x *Middler)GetAdminSesionRoleid() interface{} {
+	s := x.Session.Get(SESSION_VALUE_ADMINLOGIN_ROLE)
+	return s
+}
+
 
 
 
@@ -133,7 +184,7 @@ func Contains(obj interface{}, target interface{}) (bool, error) {
 
 
 
-//权限判断
-func CheckPermission()  {
+type BaseHandler struct {
+	Middler
 
 }

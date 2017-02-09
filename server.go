@@ -59,8 +59,7 @@ func main() {
 
 	//路由
 	Tg.Group("/admin", func(g *tango.Group) {
-		g.Use( A.AdminHandler )
-
+		g.Route([]string{"GET:Get","POST:Post"},"/index",new(A.AdminMain))
 		g.Route([]string{"GET:Get","POST:Post"},"/login",new(A.AdminLogin))
 
 	})

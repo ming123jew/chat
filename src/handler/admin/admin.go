@@ -12,13 +12,14 @@ const (
 )
 
 
-type Admin struct {
+type AdminHandler struct {
 	BaseHandler
 }
 
 
+
 type AdminLogin struct {
-	Admin
+	AdminHandler
 	Username string
 	Password string
 }
@@ -54,6 +55,7 @@ func (x *AdminLogin) Post()  {
 	}
 
 }
+
 
 
 

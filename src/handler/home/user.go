@@ -112,7 +112,8 @@ func (x *UserLogin) Post() {
 
 	if has == true{
 
-		x.Session.Set(SESSION_VALUE_USERLOGIN,user)
+		x.Session.Set(SESSION_VALUE_ADMINLOGIN,user)
+		x.Session.Set(SESSION_VALUE_ADMINLOGIN_ROLE,user.Roleid)
 		log.Println("yes")
 		x.Ctx.Redirect("/home/index")
 	}
